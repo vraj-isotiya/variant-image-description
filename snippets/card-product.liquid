@@ -40,7 +40,12 @@
       assign ratio = 1
     endif
   -%}
-  <div class="card-wrapper product-card-wrapper underline-links-hover">
+
+  {% comment %} Custom code: add class name:card-product-custom-div and data-section-id {% endcomment %}
+  <div
+    class="card-wrapper product-card-wrapper underline-links-hover card-product-custom-div"
+    data-section-id="{{ section.id }}"
+  >
     <div
       class="
         card card--{{ settings.card_style }}
@@ -107,7 +112,7 @@
           </div>
         {%- endif -%}
         <div class="card__content">
-          <div class="card__information">
+          <div class="card__information ">
             <h3
               class="card__heading"
               {% if card_product.featured_media == null and settings.card_style == 'standard' %}
@@ -144,6 +149,43 @@
         </div>
       </div>
       <div class="card__content">
+        {% comment %} Custom Code for Collection page {% endcomment %}
+        {% assign has_color_or_size = false %}
+        {% for option in card_product.options_with_values %}
+          {% if option.name == 'Color' or option.name == 'Size' %}
+            {% assign has_color_or_size = true %}
+            {% break %}
+          {% endif %}
+        {% endfor %}
+
+        {% if has_color_or_size %}
+          <div class="tr-collection-product-card-variants-wrapper" style="padding: 10px 0px;">
+            {%- for card_product_option in card_product.options_with_values -%}
+              {% if card_product_option.name == 'Color' or card_product_option.name == 'Size' %}
+                <div
+                  class="tr-collection-product-card__variants"
+                  style="display: flex; flex-wrap: wrap; padding-top:5px;"
+                >
+                  {% assign variant_options_images = variant_images_data.value
+                    | where: 'variant_name', card_product_option.name
+                  %}
+                  {% assign special_handling = false %}
+                  {% if variant_options_images.size > 0 %}
+                    {% assign special_handling  = true %}
+                  {% endif %}
+                  {% assign lazy_load_all_variants = true %}
+                  {% render 'card-variant-swatch-custom',
+                    product: card_product,
+                    option: card_product_option,
+                    variant_images_data: variant_options_images,
+                    lazy_load_all_variants: lazy_load_all_variants
+                  %}
+                </div>
+              {% endif %}
+            {%- endfor -%}
+          </div>
+        {% endif %}
+        {% comment %} Custom Code for Collection page {% endcomment %}
         <div class="card__information">
           <h3
             class="card__heading{% if card_product.featured_media or settings.card_style == 'standard' %} h5{% endif %}"
@@ -151,11 +193,13 @@
               id="title-{{ section_id }}-{{ card_product.id }}"
             {% endif %}
           >
+            {% comment %} Custom code: add anchor tag  {% endcomment %}
             <a
               href="{{ card_product.url }}"
               id="CardLink-{{ section_id }}-{{ card_product.id }}"
               class="full-unstyled-link"
               aria-labelledby="CardLink-{{ section_id }}-{{ card_product.id }} Badge-{{ section_id }}-{{ card_product.id }}"
+              style="top: auto !important;"
             >
               {{ card_product.title | escape }}
             </a>
@@ -568,6 +612,7 @@
       </div>
     </div>
   </div>
+
 {%- else -%}
   {%- liquid
     assign ratio = 1
